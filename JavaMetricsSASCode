@@ -1,0 +1,231 @@
+/* make library for project */;
+
+libname stat "/home/u61567054/STAT 7100/Project";
+	run;
+	
+/* use SAS generated code to import the data, renaming it stat.coffee */;
+
+/* Generated Code (IMPORT) */
+/* Source File: CoffeeData.xlsx */
+/* Source Path: /home/u61567054/STAT 7100/Project */
+/* Code generated on: 11/15/24, 7:26 AM */
+
+FILENAME REFFILE '/home/u61567054/STAT 7100/Project/CoffeeData.xlsx';
+
+PROC IMPORT DATAFILE=REFFILE
+	DBMS=XLSX
+	OUT=stat.coffee;
+	GETNAMES=YES;
+RUN;
+
+/* create new variables with title of product */;
+
+data stat.coffee;
+	set stat.coffee;
+	if 1 LE B LE 10 then product_type="Total coffee, tea, and spices";
+	if 11 LE B LE 19 then product_type="Coffee beans, unroasted 1/";
+	if 20 LE B LE 27 then product_type="Coffee, roasted and instant 2/";
+	if 28 LE B LE 34 then product_type="Coffee extracts and preparations 3/";
+	if 35 LE B LE 41 then product_type="Tea and mate";
+	if 42 LE B LE 52 then product_type="Spices";
+	if missing(B) then delete;
+	rename y209=y2009;
+	drop a;
+	run;
+	
+/* new dataset with world quanitity variables so that all numeric values are in million dollars */;
+
+data stat.coffee_worldquantity;
+	set stat.coffee;
+	if C="World (quantity)" then output;
+	rename d=units b=obs_ID;
+	drop c;
+	run;
+
+/* remove world quantity from original set, delete million dollars,  */;
+
+data stat.coffee;
+	set stat.coffee;
+	if C="World (quantity)" then delete;
+	drop d;
+	rename b=obs_ID c=exporting_country;
+	run;
+	
+/* remove world amounts into their own data set */;
+
+data stat.worldcoffee;
+	set stat.coffee;
+	if exporting_country="World";
+	run;
+
+data stat.coffee;
+	set stat.coffee;
+	if exporting_country="World" then delete;
+	run;
+	
+/* check distributions of anaylsis years */;
+
+ods rtf file="/home/u61567054/STAT 7100/Project/distributions.rtf" style=sapphire;
+TITLE "DISTRIBUTION OF YEAR 2023";
+ods select Histogram;
+proc univariate data=stat.coffee noprint;
+	var y2023;
+	histogram / normal;
+	run;
+	
+TITLE "DISTRIBUTION OF YEAR 2022";
+ods select Histogram;
+proc univariate data=stat.coffee noprint;
+	var y2022;
+	histogram / normal;
+	run;
+	
+TITLE "DISTRIBUTION OF YEAR 2020";
+ods select Histogram;
+proc univariate data=stat.coffee noprint;
+	var y2020;
+	histogram / normal;
+	run;
+	
+TITLE "DISTRIBUTION OF YEAR 2019";
+ods select Histogram;
+proc univariate data=stat.coffee noprint;
+	var y2019;
+	histogram / normal;
+	run;
+ods rtf close;
+
+/* get descriptive statistics of years */;
+
+ods rtf file="/home/u61567054/STAT 7100/Project/descriptivestats.rtf" style=sapphire;
+TITLE 'DESCRIPTIVE STATISTICS FOR REPORT';
+proc means data=stat.coffee n nmiss mean median stddev range q1 q3;
+	run;
+ods rtf close;
+
+ods rtf file="/home/u61567054/STAT 7100/Project/descriptivestats1.rtf" style=sapphire;
+TITLE 'DESCRIPTIVE STATISTICS FOR PRESENTATION';
+proc means data=stat.coffee n nmiss mean median stddev range q1 q3;
+	var y2019 y2020 y2022 y2023;
+	run;
+ods rtf close;
+	
+/* level 4 comparitve years as catagorical varibles using q1 and q3 boundaries */;
+
+data stat.coffee;
+	set stat.coffee;
+	length yr2023_levels $10.;
+	if y2023 LT 133.6 then yr2023_levels="Low";
+	if 133.6 LE y2023 LE 678 then yr2023_levels="Moderate";
+	if y2023 GT 678 then yr2023_levels="High";
+	length yr2022_levels $10.;
+	if y2022 LT 127.9 then yr2022_levels="Low";
+	if 127.9 LE y2022 LE 723.15 then yr2022_levels="Moderate";
+	if y2022 GT 723.15 then yr2022_levels="High";
+	length yr2020_levels $10.;
+	if y2020 LT 94.95 then yr2020_levels="Low";
+	if 94.95 LE y2020 LE 429.9 then yr2020_levels="Moderate";
+	if y2020 GT 429.9 then yr2020_levels="High";
+	length yr2019_levels $10.;
+	if y2019 LT 94.8 then yr2019_levels="Low";
+	if 94.8 LE y2019 LE 389.85 then yr2019_levels="Moderate";
+	if y2019 GT 389.85 then yr2019_levels="High";
+	run;
+	
+/* see correlation coefficients for 4 analysis variables */;
+
+ods rtf file="/home/u61567054/STAT 7100/Project/correlationcoeffs.rtf" style=sapphire;
+TITLE "CORRELATION COEFFICIENTS FOR YEARS";
+proc corr data=stat.coffee;
+		var y2023 y2022 y2019 y2020;
+		run;
+ods rtf close;
+
+/* create visual for 2 comparison varibels y2023 and y2020 */;
+
+ods rtf file="/home/u61567054/STAT 7100/Project/scatterplot.rtf" style=sapphire;
+TITLE "SCATTERPLOT OF YEARS 2019 AND 2023";
+proc corr data=stat.coffee plots=scatter (nvar=all);
+	var y2023 y2019;
+	run;
+ods rtf close;
+	
+/* ANOVA test for data comparing types of products and exporting country*/;
+
+ods rtf file="/home/u61567054/STAT 7100/Project/ANOVA.rtf" style=sapphire;
+TITLE "ANOVA TEST FOR Y2023 AND EXPORTING COUNTRY";
+proc anova data=stat.coffee;
+	class exporting_country;
+	model y2023 = exporting_country;
+	means exporting_country / tukey;
+	run;
+	
+TITLE "ANOVA TEST FOR Y2023 AND PRODUCT TYPE";
+proc anova data=stat.coffee;
+	class product_type;
+	model y2023 = product_type;
+	means product_type / tukey;
+	run;
+	
+TITLE "ANOVA TEST FOR Y2019 AND EXPORTING COUNTRY";
+proc anova data=stat.coffee;
+	class exporting_country;
+	model y2019 = exporting_country;
+	means exporting_country / tukey;
+	run;
+
+TITLE "ANOVA TEST FOR Y2019 AND PRODUCT TYPE";
+proc anova data=stat.coffee;
+	class product_type;
+	model y2019 = product_type;
+	means product_type / tukey;
+	run;
+ods rtf close;
+
+/* ANOVA test comparing y2019 levels and y2023 levels*/;
+
+ods rtf file="/home/u61567054/STAT 7100/Project/ANOVALEVELS.rtf" style=sapphire;
+TITLE "ANOVA FOR YEAR 2023 AND YR2019_LEVELS";
+proc anova data=stat.coffee;
+	class yr2019_levels;
+	model y2023 = yr2019_levels;
+	means yr2019_levels / tukey;
+	run;
+	
+TITLE "ANOVA FOR YEAR 2019 AND YR2023_LEVLES";
+proc anova data=stat.coffee;
+	class yr2023_levels;
+	model y2019 = yr2023_levels;
+	means yr2023_levels / tukey;
+	run;
+ods rtf close;
+
+/* paired t-Test for years 2019 and 2023*/;
+
+ods rtf file="/home/u61567054/STAT 7100/Project/pairedt-test.rtf" style=sapphire;
+TITLE "PAIRED T-TEST FOR YEARS 2019 AND 2023";
+proc ttest data=stat.coffee sides=U alpha=0.05;
+	paired y2023*y2019;
+	run;
+	
+TITLE "PAIRED T-TEST FOR YEARS 2020 AND 2023";
+proc ttest data=stat.coffee sides=U alpha=0.05;
+	paired y2023*y2020;
+	run;
+ods rtf close;	
+
+ods rtf file="/home/u61567054/STAT 7100/Project/t-test.rtf" style=sapphire;
+TITLE "T-TEST FOR Y2019 AND YR2023_LEVELS";
+proc ttest data=stat.coffee sides=U alpha=0.05;
+	class yr2023_levels;
+	var y2019;
+	run;
+
+/* simple linear regression for y2019 and y2023 */;
+
+ods rtf file="/home/u61567054/STAT 7100/Project/linearreg.rtf" style=sapphire;
+TITLE "SIMPLE LINEAR REGRESSION FOR YEARS 2019 AND 2023";
+proc reg data=stat.coffee;
+	model y2023=y2019;
+	run;
+ods rtf close;
