@@ -7,7 +7,7 @@ COVID-19 changed many aspects of everyday life. As time goes on after COVID, res
 
 User Instructions:
 ===
-Theere is a SAS code program that can be run in SAS. There is also a project report and presentation slide deck that can be utilized to gather information. Please do not reproduce the slide deck or report without permission from the project owner.
+There is a SAS code program that can be run in SAS. There is also a project report and presentation slide deck that can be utilized to gather information. Please do not reproduce the slide deck or report without permission from the project owner.
 
 Technology Requirements:
 ===
@@ -15,4 +15,4 @@ This project was built using SAS code. SAS 9.4 or SAS Studio will be needed to a
 
 Project Owner:
 ===
-This project was created by Samantha Doyle, a graduate student at Kennesaw State Unviersity in the Data Science and Analytics program.
+This project was created by Samantha Doyle, a graduate student at Kennesaw State Unviersity in the Data Science and Analytics program. This project was an assignment from STAT 7100 at Kennesaw State University. All project guidelines belong to the professor and KSU.
